@@ -38,9 +38,16 @@ def minimax(turn, board_string):
 
     move_scores = []
     for string in possible_moves:
-        move_scores.append(minimax("O" if turn == "X" else "X", string))
+        score = minimax("O" if turn == "X" else "X", string)
+        if turn == "X":
+            if score == 1:
+                return 1
+        elif turn == "O":
+            if score == -1:
+                return -1
+        move_scores.append(score)
 
-    return max(move_scores) if turn =="X" else min(move_scores)
+    return max(move_scores) if turn == "X" else min(move_scores)
 
 def find_best(turn, board_string):
     possible_moves = []
