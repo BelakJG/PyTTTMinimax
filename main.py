@@ -76,6 +76,8 @@ if __name__ == "__main__":
         string = string[:move_index] + turn + string[move_index + 1:]
         turn = "X" if turn == "O" else "O"
         print("\n")
+        if check_winner(string) is not None:
+            break
 
     winner = check_winner(string)
     print("Tie! No one wins!" if winner == 0 else f"Player {turn} wins!")
