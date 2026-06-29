@@ -1,36 +1,32 @@
 from functools import cache
 
-player = "X"
-
 def print_board(board_string):
     for i in range(9):
         print(f"{board_string[i] if board_string[i] != "." else i} {"\n" if i in {2, 5, 8} else "| "}", end="")
 
 @cache
 def check_winner(board_string):
-    global player
     #horizontals
     for i in range(0, 7, 3):
         if board_string[0 + i] != "." and (board_string[0 + i] == board_string[1 + i] == board_string[2 + i]):
-            return 1 if board_string[0 + i] == player else -1
+            return 1 if board_string[0 + i] == "X" else -1
     #verticals
     for i in range(3):
         if board_string[0 + i] != "." and (board_string[0 + i] == board_string[3 + i] == board_string[6 + i]):
-            return 1 if board_string[0 + i] == player else -1
+            return 1 if board_string[0 + i] == "X" else -1
     #diags
     if board_string[0] != "." and (board_string[0] == board_string[4] == board_string[8]):
-        return 1 if board_string[0] == player else -1
+        return 1 if board_string[0] == "X" else -1
     if board_string[6] != "." and (board_string[6] == board_string[4] == board_string[2]):
-        return 1 if board_string[6] == player else -1
+        return 1 if board_string[6] == "X" else -1
     #check draw
     if "." not in board_string:
         return 0
-    #no winner
+    #no winner, game still going
     return None
 
 @cache
-def minimax(current_turn, board_string):
-    global player
+def minimax(turn, board_string):
     winner = check_winner(board_string)
     if winner is not None:
         return winner
@@ -38,45 +34,49 @@ def minimax(current_turn, board_string):
     possible_moves = []
     for i in range(9):
         if board_string[i] == ".":
-            new_string = board_string[:i] + current_turn + board_string[i + 1:]
-            possible_moves.append(new_string)
-    if not possible_moves:
-        return 0
+            possible_moves.append(board_string[:i] + turn + board_string[i + 1:])
 
     move_scores = []
     for string in possible_moves:
-        move_scores.append(minimax("O" if current_turn == "X" else "X", string))
+        move_scores.append(minimax("O" if turn == "X" else "X", string))
 
-    if current_turn == player:
-        return max(move_scores)
-    else:
-        return min(move_scores)
+    return max(move_scores) if turn =="X" else min(move_scores)
 
-def find_best(board_string):
-    global player
-    moves = []
+def find_best(turn, board_string):
+    possible_moves = []
     for i in range(9):
         if board_string[i] == ".":
-            new_string = board_string[:i] + player + board_string[i + 1:]
-            moves.append(new_string)
+            possible_moves.append(board_string[:i] + turn + board_string[i + 1:])
 
-    scores = []
-    for move in moves:
-        scores.append(minimax("O" if player == "X" else "X", move))
-    return moves[scores.index(max(scores))]
+    move_scores = []
+    for string in possible_moves:
+        move_scores.append(minimax("O" if turn == "X" else "X", string))
+
+    return possible_moves[move_scores.index(max(move_scores) if turn == "X" else min(move_scores))]
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == "__main__":
     string = "........."
-    player = "X" if int(input("Are player 1 or 2?: ")) == 1 else "O"
-    if player == "O":
+    turn = "X" if input("Are you player 1 or 2?: ") == "1" else "O"
+    if turn == "O":
         print_board(string)
-        index = int(input("What position did your opponent play?: "))
-        string = string[:index] + ("O" if player == "X" else "X") + string[index + 1:]
+        move_index = int(input("What position did player X play?: "))
+        string = string[:move_index] + "X" + string[move_index + 1:]
     while string.count(".") > 0:
-        print("Your best move is:")
-        string = find_best(string)
         print_board(string)
-        index = int(input("What position did your opponent play?: "))
-        string = string[:index] + ("O" if player == "X" else "X") + string[index + 1:]
-        print("\n" * 25)
+        print("\nYour best move is:")
+        string = find_best(turn, string)
+        print_board(string)
+        if check_winner(string) is not None:
+            break
+        turn = "X" if turn == "O" else "O"
+
+        move_index = int(input(f"What position did player {turn} play?: "))
+        string = string[:move_index] + turn + string[move_index + 1:]
+        turn = "X" if turn == "O" else "O"
+        print("\n")
+
+    winner = check_winner(string)
+    print("Tie! No one wins!" if winner == 0 else f"Player {turn} wins!")
+    print_board(string)
